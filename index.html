@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Plomp & Levelt Dissonance Curve</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        #chart-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        .chart-and-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-section {
+            flex: 1;
+        }
+        
+        .info-sidebar {
+            width: 200px;
+            min-height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .info-sidebar .info-item {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .info-sidebar .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-sidebar .info-item div:first-child {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .info-sidebar .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            border-radius: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .slider-container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .slider-label {
+            display: block;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .frequency-display {
+            font-size: 1.5em;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #ff6b6b, #4ecdc4, #45b7d1);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #FFD700;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #FFD700;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .play-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
+        }
+
+        .play-button:active {
+            transform: translateY(0);
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Plomp & Levelt Dissonance Curve</h1>
+        
+        <div class="chart-and-info">
+            <div class="chart-section">
+                <div id="chart-container">
+                    <canvas id="dissonanceChart" width="800" height="400"></canvas>
+                </div>
+            </div>
+            <div class="info-sidebar">
+                <div class="info-item">
+                    <div>Base Frequency</div>
+                    <div class="info-value">220.0 Hz</div>
+                </div>
+                <div class="info-item">
+                    <div>Current Interval</div>
+                    <div class="info-value" id="intervalDisplay">Octave (2:1)</div>
+                </div>
+                <div class="info-item">
+                    <div>Dissonance Level</div>
+                    <div class="info-value" id="dissonanceDisplay">0.00</div>
+                </div>
+                <div class="info-item">
+                    <div>Frequency Range</div>
+                    <div class="info-value">220-440 Hz</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 10px;">
+            <label for="edoInput" style="font-weight: 500; font-size: 1.08em;">EDO/TET:</label>
+            <input type="number" id="edoInput" min="1" max="72" value="12" style="width: 60px; padding: 3px 6px; border-radius: 6px; border: none; outline: none; font-size: 1em;">
+            <span style="color: #bbb; font-size: 0.95em;">(vertical lines show notes in this tuning)</span>
+        </div>
+
+        <div class="controls">
+            <div class="slider-container">
+                <label class="slider-label">
+                    Second Tone Frequency: <span class="frequency-display" id="freqDisplay">330.0 Hz</span>
+                </label>
+                <input type="range" id="frequencySlider" min="220" max="440" value="330" step="1">
+            </div>
+            <button class="play-button" id="playButton">▶ Play Continuous</button>
+        </div>
+        <div id="partialsHeaderBar" style="display: flex; align-items: center; gap: 16px; margin: 24px 0 10px 0;">
+            <h3 style="margin: 0; color: #333; flex: none;">Custom Partials/Overtones</h3>
+            <button id="toggleTimbre" style="padding: 8px 16px; border-radius: 8px; border: none; background: #e24a90; color: white; cursor: pointer; font-size: 1em;">Different Timbres</button>
+            <button type="button" id="updateGraphBtn" style="padding: 8px 16px; border-radius: 8px; border: none; background: #4a90e2; color: white; cursor: pointer; font-size: 1em;">Update Graph</button>
+        </div>
+        
+            <div id="partialsContainer" style="display: flex; gap: 20px;">
+                <div id="partials1Container" style="flex: 1;">
+                    <h4 style="margin-bottom: 8px; color: #666;">Note 1 (220 Hz)</h4>
+                    <div style="margin-bottom: 8px;">
+                        <label><input type="radio" name="partialsMode" id="modeRatio" value="ratio" checked> Ratio</label>
+                        <label style="margin-left: 15px;"><input type="radio" name="partialsMode" id="modeHz" value="hz"> Hz</label>
+                    </div>
+                    <form id="partialsForm" style="margin-bottom: 10px;">
+                        <table id="partialsTable" style="width:100%; background: rgba(255,255,255,0.07); border-radius: 10px; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 8px; text-align: center;">Partial (Ratio or Hz)</th>
+                                    <th style="padding: 8px; text-align: center;">Amplitude (0-1)</th>
+                                    <th style="padding: 8px; text-align: center;">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partialsTbody">
+                                <!-- Rows inserted by JS -->
+                            </tbody>
+                        </table>
+                        <button type="button" id="addPartialBtn" style="margin-top: 10px;">Add Partial</button>
+                        <button type="button" id="resetHarmonicsBtn" style="margin-top: 10px; margin-left: 10px;">Reset to Harmonics</button>
+                        
+                    </form>
+                </div>
+                <div id="partials2Container" style="flex: 1;">
+                    <h4 style="margin-bottom: 8px; color: #666;">Note 2 (330 Hz)</h4>
+                    <div style="margin-bottom: 8px;">
+                        <label><input type="radio" name="partialsMode2" id="modeRatio2" value="ratio" checked> Ratio</label>
+                        <label style="margin-left: 15px;"><input type="radio" name="partialsMode2" id="modeHz2" value="hz"> Hz</label>
+                    </div>
+                    <form id="partialsForm2" style="margin-bottom: 10px;">
+                        <table id="partialsTable2" style="width:100%; background: rgba(255,255,255,0.07); border-radius: 10px; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 8px; text-align: center;">Partial (Ratio or Hz)</th>
+                                    <th style="padding: 8px; text-align: center;">Amplitude (0-1)</th>
+                                    <th style="padding: 8px; text-align: center;">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partialsTbody2">
+                                <!-- Rows inserted by JS -->
+                            </tbody>
+                        </table>
+                        <button type="button" id="addPartialBtn2" style="margin-top: 10px;">Add Partial</button>
+                        <button type="button" id="resetHarmonicsBtn2" style="margin-top: 10px; margin-left: 10px;">Reset to Harmonics</button>
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // Audio context and synthesis setup
+        let oscillators1 = []; // First tone harmonics
+        let oscillators2 = []; // Second tone harmonics
+        let isPlaying = false;
+        let audioInitialized = false;
+        
+        // Initialize Tone.js
+        async function initAudio() {
+            if (!audioInitialized) {
+                try {
+                    await Tone.start();
+                    console.log('Audio context started');
+                    audioInitialized = true;
+                } catch (error) {
+                    console.error('Failed to start audio context:', error);
+                }
+            }
+        }
+
+        // Plomp & Levelt dissonance function
+        function plomp(f1, f2) {
+            const fmin = Math.min(f1, f2);
+            const fmax = Math.max(f1, f2);
+            const s = 0.24 / (0.021 * fmin + 19.0);
+            return Math.exp(-3.5 * s * (fmax - fmin)) - Math.exp(-5.75 * s * (fmax - fmin));
+        }
+
+        function plompSpectrum(spectrum1, spectrum2) {
+            // spectrum1/2: [{freq, amp}]
+            let c = 0.0;
+            for (let i = 0; i < spectrum1.length; i++) {
+                for (let j = 0; j < spectrum2.length; j++) {
+                    const a1 = isNaN(spectrum1[i].amp) ? 0 : spectrum1[i].amp;
+                    const a2 = isNaN(spectrum2[j].amp) ? 0 : spectrum2[j].amp;
+                    c += a1 * a2 * plomp(spectrum1[i].freq, spectrum2[j].freq);
+                }
+            }
+            return c;
+        }
+
+        // Generate dissonance curve data
+        function generateDissonanceCurve() {
+            const fundamental1 = 220.0;
+            const frequencies = [];
+            const dissonanceValues = [];
+            // Validate partials
+            let validPartials1 = Array.isArray(partials) && partials.length > 0 && partials.every(p => {
+                if (partialsMode === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+            });
+            let validPartials2 = Array.isArray(partials2) && partials2.length > 0 && partials2.every(p => {
+                if (partialsMode2 === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+            });
+            let usedPartials1 = validPartials1 ? partials : [
+                { ratio: 1, amplitude: 1.0 },
+                { ratio: 2, amplitude: 0.5 },
+                { ratio: 3, amplitude: 0.33 },
+                { ratio: 4, amplitude: 0.25 },
+                { ratio: 5, amplitude: 0.2 }
+            ];
+            let usedPartials2 = (differentTimbres && validPartials2) ? partials2 : usedPartials1;
+            let mode1 = partialsMode;
+            let mode2 = differentTimbres ? partialsMode2 : partialsMode;
+            for (let f2 = 220; f2 <= 440; f2 += 1) {
+                frequencies.push(f2);
+                const spectrum1 = [];
+                const spectrum2 = [];
+                for (let i = 0; i < usedPartials1.length; i++) {
+                    let freq1, amp1;
+                    if (mode1 === 'ratio') {
+                        freq1 = fundamental1 * parseFloat(usedPartials1[i].ratio || 1);
+                    } else {
+                        freq1 = parseFloat(usedPartials1[i].hz || fundamental1);
+                    }
+                    amp1 = isNaN(usedPartials1[i].amplitude) ? 1.0 : usedPartials1[i].amplitude;
+                    spectrum1.push({ freq: freq1, amp: amp1 });
+                }
+                for (let i = 0; i < usedPartials2.length; i++) {
+                    let freq2p, amp2;
+                    if (mode2 === 'ratio') {
+                        freq2p = f2 * parseFloat(usedPartials2[i].ratio || 1);
+                    } else {
+                        freq2p = parseFloat(usedPartials2[i].hz || f2);
+                    }
+                    amp2 = isNaN(usedPartials2[i].amplitude) ? 1.0 : usedPartials2[i].amplitude;
+                    spectrum2.push({ freq: freq2p, amp: amp2 });
+                }
+                const diss = plompSpectrum(spectrum1, spectrum2);
+                dissonanceValues.push(diss);
+            }
+            return { frequencies, dissonanceValues };
+        }
+
+        // Chart rendering
+        function drawChart(frequencies, dissonanceValues, currentFreq) {
+            const canvas = document.getElementById('dissonanceChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Setup
+            const padding = 80;
+            const chartWidth = canvas.width - 2 * padding;
+            const chartHeight = canvas.height - 2 * padding;
+            
+            // Find min/max for scaling (one octave: 220-440 Hz)
+            const minFreq = 220;
+            const maxFreq = 440;
+            const minDiss = Math.min(...dissonanceValues);
+            const maxDiss = Math.max(...dissonanceValues);
+            
+            // Background
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(padding, padding, chartWidth, chartHeight);
+            
+            // Axes
+            ctx.strokeStyle = '#495057';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + chartHeight);
+            ctx.lineTo(padding + chartWidth, padding + chartHeight);
+            ctx.stroke();
+            
+            // Draw EDO/TET note lines if specified (drawn behind the curve)
+            if (window.selectedEDO && !isNaN(window.selectedEDO) && window.selectedEDO >= 2) {
+                ctx.save();
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([]); // solid lines
+                for (let i = 0; i <= window.selectedEDO; i++) {
+                    const ratio = Math.pow(2, i / window.selectedEDO);
+                    const freq = 220 * ratio;
+                    if (freq < minFreq || freq > maxFreq) continue;
+                    const x = padding + ((freq - minFreq) / (maxFreq - minFreq)) * chartWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, padding + chartHeight);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Draw dissonance curve
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i < frequencies.length; i++) {
+                const x = padding + ((frequencies[i] - minFreq) / (maxFreq - minFreq)) * chartWidth;
+                const y = padding + chartHeight - ((dissonanceValues[i] - minDiss) / (maxDiss - minDiss)) * chartHeight;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Current frequency indicator (vertical line)
+            const currentX = padding + ((currentFreq - minFreq) / (maxFreq - minFreq)) * chartWidth;
+            ctx.strokeStyle = '#dc3545';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(currentX, padding);
+            ctx.lineTo(currentX, padding + chartHeight);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Current frequency point (circle on curve)
+            const currentDissonance = getCurrentDissonance(currentFreq);
+            const pointY = padding + chartHeight - ((currentDissonance - minDiss) / (maxDiss - minDiss)) * chartHeight;
+            
+            ctx.fillStyle = '#dc3545';
+            ctx.beginPath();
+            ctx.arc(currentX, pointY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // White border around point
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(currentX, pointY, 6, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Labels
+            ctx.fillStyle = '#495057';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // X-axis labels (every 40 Hz)
+            for (let freq = 220; freq <= 440; freq += 40) {
+                const x = padding + ((freq - minFreq) / (maxFreq - minFreq)) * chartWidth;
+                ctx.fillText(freq, x, padding + chartHeight + 20);
+            }
+            
+            // Add musical interval markers (including more ratios)
+            const intervals = [
+                { freq: 220, name: "1:1", color: "#28a745" },
+                { freq: 247, name: "9:8", color: "#6f42c1" },
+                { freq: 264, name: "8:7", color: "#fd7e14" },
+                { freq: 275, name: "5:4", color: "#6f42c1" },
+                { freq: 293, name: "4:3", color: "#28a745" },
+                { freq: 308, name: "7:5", color: "#fd7e14" },
+                { freq: 352, name: "8:5", color: "#fd7e14" }, // correct 8/5
+                { freq: 330, name: "3:2", color: "#28a745" },
+                { freq: 385, name: "7:4", color: "#fd7e14" }, // correct 7/4
+                { freq: 367, name: "5:3", color: "#6f42c1" },
+                { freq: 440, name: "2:1", color: "#28a745" }
+            ];
+            
+            ctx.font = '10px Arial';
+            intervals.forEach(interval => {
+                const x = padding + ((interval.freq - minFreq) / (maxFreq - minFreq)) * chartWidth;
+                ctx.fillStyle = interval.color;
+                ctx.fillText(interval.name, x, padding - 10);
+                
+                // Small tick mark
+                ctx.strokeStyle = interval.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, padding - 5);
+                ctx.lineTo(x, padding);
+                ctx.stroke();
+            });
+            
+            // Draw EDO/TET note lines if specified
+            if (window.selectedEDO && !isNaN(window.selectedEDO) && window.selectedEDO >= 2) {
+                ctx.save();
+                ctx.strokeStyle = '#aaa';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([]); // solid lines
+                for (let i = 0; i <= window.selectedEDO; i++) {
+                    const ratio = Math.pow(2, i / window.selectedEDO);
+                    const freq = 220 * ratio;
+                    if (freq < minFreq || freq > maxFreq) continue;
+                    const x = padding + ((freq - minFreq) / (maxFreq - minFreq)) * chartWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, padding + chartHeight);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+            
+            // Y-axis labels
+            ctx.fillStyle = '#495057';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const diss = minDiss + (i / 4) * (maxDiss - minDiss);
+                const y = padding + chartHeight - (i / 4) * chartHeight;
+                ctx.fillText(diss.toFixed(2), padding - 10, y + 5);
+            }
+            
+            // Axis titles
+            ctx.fillStyle = '#212529';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Frequency of 2nd Tone (Hz) - One Octave', canvas.width / 2, canvas.height - 10);
+            
+            ctx.save();
+            ctx.translate(20, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Dissonance Level', 0, 0);
+            ctx.restore();
+        }
+
+        // Calculate interval name
+        function getIntervalName(freq1, freq2) {
+            const ratio = freq2 / freq1;
+            const intervals = [
+                { ratio: 1.0, name: "Unison (1:1)" },
+                { ratio: 16/15, name: "Minor 2nd (16:15)" },
+                { ratio: 9/8, name: "Major 2nd (9:8)" },
+                { ratio: 6/5, name: "Minor 3rd (6:5)" },
+                { ratio: 5/4, name: "Major 3rd (5:4)" },
+                { ratio: 4/3, name: "Perfect 4th (4:3)" },
+                { ratio: 45/32, name: "Tritone (45:32)" },
+                { ratio: 3/2, name: "Perfect 5th (3:2)" },
+                { ratio: 8/5, name: "Minor 6th (8:5)" },
+                { ratio: 5/3, name: "Major 6th (5:3)" },
+                { ratio: 16/9, name: "Minor 7th (16:9)" },
+                { ratio: 15/8, name: "Major 7th (15:8)" },
+                { ratio: 2.0, name: "Octave (2:1)" }
+            ];
+            
+            let closest = intervals[0];
+            let minDiff = Math.abs(ratio - closest.ratio);
+            
+            for (const interval of intervals) {
+                const diff = Math.abs(ratio - interval.ratio);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = interval;
+                }
+            }
+            
+            return closest.name;
+        }
+
+        // Get current dissonance value
+        function getCurrentDissonance(freq2) {
+            const fundamental1 = 220.0;
+            // Use the same partials as the synthesis and graph
+            let validPartials = Array.isArray(partials) && partials.length > 0 && partials.every(p => {
+                if (partialsMode === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+            });
+            const usedPartials1 = partials.length > 0 ? partials : defaultHarmonics;
+            const usedPartials2 = differentTimbres && partials2.length > 0 ? partials2 : usedPartials1;
+            const spectrum1 = [];
+            const spectrum2 = [];
+            for (let i = 0; i < usedPartials1.length; i++) {
+                let freq1, amp;
+                if (partialsMode === 'ratio') {
+                    freq1 = fundamental1 * parseFloat(usedPartials1[i].ratio || 1);
+                } else {
+                    freq1 = parseFloat(usedPartials1[i].hz || fundamental1);
+                }
+                amp = isNaN(usedPartials1[i].amplitude) ? 1.0 : usedPartials1[i].amplitude;
+                spectrum1.push({ freq: freq1, amp });
+            }
+            for (let i = 0; i < usedPartials2.length; i++) {
+                let freq2p, amp;
+                if (differentTimbres && partialsMode2 === 'ratio') {
+                    freq2p = freq2 * parseFloat(usedPartials2[i].ratio || 1);
+                } else if (differentTimbres && partialsMode2 === 'hz') {
+                    freq2p = parseFloat(usedPartials2[i].hz || freq2);
+                } else if (partialsMode === 'ratio') {
+                    freq2p = freq2 * parseFloat(usedPartials2[i].ratio || 1);
+                } else {
+                    freq2p = parseFloat(usedPartials2[i].hz || freq2);
+                }
+                amp = isNaN(usedPartials2[i].amplitude) ? 1.0 : usedPartials2[i].amplitude;
+                spectrum2.push({ freq: freq2p, amp });
+            }
+            return plompSpectrum(spectrum1, spectrum2);
+        }
+
+        async function startContinuousPlayback(freq2) {
+            if (isPlaying) return;
+            await initAudio();
+            try {
+                isPlaying = true;
+                oscillators1 = [];
+                oscillators2 = [];
+                const fundamental1 = 220.0;
+                let usedPartials1, usedPartials2, mode1, mode2;
+                let validPartials1 = Array.isArray(partials) && partials.length > 0 && partials.every(p => {
+                    if (partialsMode === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                    else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+                });
+                let validPartials2 = Array.isArray(partials2) && partials2.length > 0 && partials2.every(p => {
+                    if (partialsMode2 === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                    else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+                });
+                usedPartials1 = validPartials1 ? partials : [
+                    { ratio: 1, amplitude: 1.0 },
+                    { ratio: 2, amplitude: 0.5 },
+                    { ratio: 3, amplitude: 0.33 },
+                    { ratio: 4, amplitude: 0.25 },
+                    { ratio: 5, amplitude: 0.2 }
+                ];
+                usedPartials2 = (differentTimbres && validPartials2) ? partials2 : usedPartials1;
+                mode1 = partialsMode;
+                mode2 = differentTimbres ? partialsMode2 : partialsMode;
+                // For each partial in each set
+                const maxLen = Math.max(usedPartials1.length, usedPartials2.length);
+                for (let i = 0; i < maxLen; i++) {
+                    // Note 1
+                    if (i < usedPartials1.length) {
+                        let freq1, amp1;
+                        if (mode1 === 'ratio') {
+                            freq1 = fundamental1 * parseFloat(usedPartials1[i].ratio || 1);
+                        } else {
+                            freq1 = parseFloat(usedPartials1[i].hz || fundamental1);
+                        }
+                        amp1 = isNaN(usedPartials1[i].amplitude) ? 1.0 : usedPartials1[i].amplitude;
+                        const osc1 = new Tone.Oscillator({
+                            frequency: freq1,
+                            type: "sine",
+                            volume: -18 + 20 * Math.log10(amp1 || 1e-6)
+                        }).toDestination();
+                        oscillators1.push(osc1);
+                        osc1.start();
+                    }
+                    // Note 2
+                    if (i < usedPartials2.length) {
+                        let freq2p, amp2;
+                        if (mode2 === 'ratio') {
+                            freq2p = freq2 * parseFloat(usedPartials2[i].ratio || 1);
+                        } else {
+                            freq2p = parseFloat(usedPartials2[i].hz || freq2);
+                        }
+                        amp2 = isNaN(usedPartials2[i].amplitude) ? 1.0 : usedPartials2[i].amplitude;
+                        const osc2 = new Tone.Oscillator({
+                            frequency: freq2p,
+                            type: "sine",
+                            volume: -18 + 20 * Math.log10(amp2 || 1e-6)
+                        }).toDestination();
+                        oscillators2.push(osc2);
+                        osc2.start();
+                    }
+                }
+                document.getElementById('playButton').textContent = '⏹ Stop';
+            } catch (error) {
+                console.error('Audio playback error:', error);
+                isPlaying = false;
+                document.getElementById('playButton').textContent = '▶ Play';
+            }
+        }
+        
+        // Update second tone frequencies while playing
+        function updateSecondTone(freq2) {
+            if (!isPlaying || oscillators2.length === 0) return;
+            let usedPartials2, mode2;
+            let validPartials2 = Array.isArray(partials2) && partials2.length > 0 && partials2.every(p => {
+                if (partialsMode2 === 'ratio') return !isNaN(parseFloat(p.ratio)) && !isNaN(parseFloat(p.amplitude));
+                else return !isNaN(parseFloat(p.hz)) && !isNaN(parseFloat(p.amplitude));
+            });
+            usedPartials2 = (differentTimbres && validPartials2) ? partials2 : partials;
+            mode2 = differentTimbres ? partialsMode2 : partialsMode;
+            for (let i = 0; i < usedPartials2.length; i++) {
+                let freq2p;
+                if (mode2 === 'ratio') {
+                    freq2p = freq2 * parseFloat(usedPartials2[i].ratio || 1);
+                } else {
+                    freq2p = parseFloat(usedPartials2[i].hz || freq2);
+                }
+                if (oscillators2[i]) {
+                    oscillators2[i].frequency.value = freq2p;
+                }
+            }
+        }
+        
+        // Stop continuous playback
+        function stopContinuousPlayback() {
+            // Stop all oscillators
+            [...oscillators1, ...oscillators2].forEach(osc => {
+                try {
+                    osc.stop();
+                    osc.dispose();
+                } catch (error) {
+                    console.error('Error stopping oscillator:', error);
+                }
+            });
+            
+            oscillators1 = [];
+            oscillators2 = [];
+            isPlaying = false;
+            document.getElementById('playButton').textContent = '▶ Play Continuous';
+        }
+
+        // --- Partials/Overtones Data and UI Logic ---
+        let partials = [];
+        let partials2 = [];
+        let differentTimbres = false;
+        const defaultHarmonics = [
+            { ratio: 1, amplitude: 1.0 },
+            { ratio: 2, amplitude: 0.5 },
+            { ratio: 3, amplitude: 1/3 },
+            { ratio: 4, amplitude: 0.25 },
+            { ratio: 5, amplitude: 0.2 },
+            { ratio: 6, amplitude: 1/6 },
+            { ratio: 7, amplitude: 1/7 },
+            { ratio: 8, amplitude: 0.125 }
+        ];
+        let partialsMode = 'ratio';
+        let partialsMode2 = 'ratio';
+        function fractionString(val) {
+            if (val === 1) return '1';
+            if (Math.abs(val - 0.5) < 1e-6) return '1/2';
+            if (Math.abs(val - 1/3) < 1e-6) return '1/3';
+            if (Math.abs(val - 0.25) < 1e-6) return '1/4';
+            if (Math.abs(val - 0.2) < 1e-6) return '1/5';
+            if (Math.abs(val - 1/6) < 1e-6) return '1/6';
+            if (Math.abs(val - 1/7) < 1e-6) return '1/7';
+            if (Math.abs(val - 0.125) < 1e-6) return '1/8';
+            return val.toPrecision(3);
+        }
+        function renderPartialsTable(focusInfo) {
+            const tbody = document.getElementById('partialsTbody');
+            tbody.innerHTML = '';
+            // Update table header
+            document.querySelector('#partialsTable thead th:first-child').textContent = partialsMode === 'ratio' ? 'Partial (Ratio)' : 'Partial (Hz)';
+            partials.forEach((p, i) => {
+                const val = partialsMode === 'ratio' ? (p.ratio ?? '') : (p.hz ?? '');
+                const inputType = partialsMode === 'ratio' ? 'partial-ratio' : 'partial-hz';
+                // Amplitude as string (fraction if default, else decimal)
+                const ampVal = (p.ampInput != null) ? p.ampInput : fractionString(p.amplitude);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 8px; text-align: center;"><input type="text" value="${val}" data-idx="${i}" class="${inputType}" style="width:80px;"></td>
+                    <td style="padding: 8px; text-align: center;"><input type="text" value="${ampVal}" data-idx="${i}" class="partial-amp" style="width:80px;"></td>
+                    <td style="padding: 8px; text-align: center;"><button type="button" class="remove-partial" data-idx="${i}">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+            // Restore focus if needed
+            if (focusInfo && typeof focusInfo.idx === 'number') {
+                const inputList = tbody.querySelectorAll('.partial-amp');
+                if (inputList[focusInfo.idx]) {
+                    inputList[focusInfo.idx].focus();
+                    if (typeof focusInfo.pos === 'number') {
+                        inputList[focusInfo.idx].setSelectionRange(focusInfo.pos, focusInfo.pos);
+                    }
+                }
+            }
+        }
+        function renderPartials2Table(focusInfo) {
+            const tbody = document.getElementById('partialsTbody2');
+            tbody.innerHTML = '';
+            // Update table header
+            document.querySelector('#partialsTable2 thead th:first-child').textContent = partialsMode2 === 'ratio' ? 'Partial (Ratio)' : 'Partial (Hz)';
+            partials2.forEach((p, i) => {
+                const val = partialsMode2 === 'ratio' ? (p.ratio ?? '') : (p.hz ?? '');
+                const inputType = partialsMode2 === 'ratio' ? 'partial2-ratio' : 'partial2-hz';
+                // Amplitude as string (fraction if default, else decimal)
+                const ampVal = (p.ampInput != null) ? p.ampInput : fractionString(p.amplitude);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 8px; text-align: center;"><input type="text" value="${val}" data-idx="${i}" class="${inputType}" style="width:80px;"></td>
+                    <td style="padding: 8px; text-align: center;"><input type="text" value="${ampVal}" data-idx="${i}" class="partial2-amp" style="width:80px;"></td>
+                    <td style="padding: 8px; text-align: center;"><button type="button" class="remove-partial2" data-idx="${i}">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+            // Restore focus if needed
+            if (focusInfo && typeof focusInfo.idx === 'number') {
+                const inputList = tbody.querySelectorAll('.partial2-amp');
+                if (inputList[focusInfo.idx]) {
+                    inputList[focusInfo.idx].focus();
+                    if (typeof focusInfo.pos === 'number') {
+                        inputList[focusInfo.idx].setSelectionRange(focusInfo.pos, focusInfo.pos);
+                    }
+                }
+            }
+        }
+        function setPartialsToDefault() {
+            if (partialsMode === 'ratio') {
+                partials = defaultHarmonics.map((h, i) => ({...h, ampInput: fractionString(h.amplitude)}));
+            } else {
+                // Convert default harmonics to Hz based on base freq
+                const baseFreq = 220;
+                partials = defaultHarmonics.map((h, i) => ({hz: baseFreq * h.ratio, amplitude: h.amplitude, ampInput: fractionString(h.amplitude)}));
+            }
+            renderPartialsTable();
+        }
+        function setPartials2ToDefault() {
+            if (partialsMode2 === 'ratio') {
+                partials2 = defaultHarmonics.map((h, i) => ({...h, ampInput: fractionString(h.amplitude)}));
+            } else {
+                // Convert default harmonics to Hz based on base freq
+                const baseFreq = 220;
+                partials2 = defaultHarmonics.map((h, i) => ({hz: baseFreq * h.ratio, amplitude: h.amplitude, ampInput: fractionString(h.amplitude)}));
+            }
+            renderPartials2Table();
+        }
+        function toggleDifferentTimbres() {
+            differentTimbres = !differentTimbres;
+            const container2 = document.getElementById('partials2Container');
+            const toggleBtn = document.getElementById('toggleTimbre');
+            if (differentTimbres) {
+                container2.style.display = 'block';
+                toggleBtn.textContent = 'Same Timbre';
+                toggleBtn.style.background = '#90e24a';
+                setPartials2ToDefault();
+            } else {
+                container2.style.display = 'none';
+                toggleBtn.textContent = 'Different Timbres';
+                toggleBtn.style.background = '#e24a90';
+            }
+        }
+        function addPartial() {
+            if (partialsMode === 'ratio') {
+                partials.push({ ratio: 1, amplitude: 1.0 });
+            } else {
+                partials.push({ hz: 220, amplitude: 1.0 });
+            }
+            renderPartialsTable();
+            updateDissonanceGraph();
+        }
+        function addPartial2() {
+            if (partialsMode2 === 'ratio') {
+                partials2.push({ ratio: 1, amplitude: 1.0 });
+            } else {
+                partials2.push({ hz: 220, amplitude: 1.0 });
+            }
+            renderPartials2Table();
+            updateDissonanceGraph();
+        }
+        function updateDissonanceGraph() {
+            if (typeof generateDissonanceCurve === 'function') {
+                dissonanceCurve = generateDissonanceCurve();
+                if (typeof drawChart === 'function') {
+                    drawChart(dissonanceCurve.frequencies, dissonanceCurve.dissonanceValues, null);
+                }
+            }
+        }
+        window.selectedEDO = 12;
+        document.addEventListener('DOMContentLoaded', () => {
+            setPartialsToDefault();
+
+            document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
+            document.getElementById('resetHarmonicsBtn2').onclick = function() { setPartials2ToDefault(); updateDissonanceGraph(); };
+            document.getElementById('updateGraphBtn').onclick = updateDissonanceGraph;
+            document.getElementById('modeRatio').onchange = function() {
+                if (this.checked) {
+                    partialsMode = 'ratio';
+                    setPartialsToDefault();
+                }
+            };
+            document.getElementById('modeHz').onchange = function() {
+                if (this.checked) {
+                    partialsMode = 'hz';
+                    setPartialsToDefault();
+                }
+            };
+            document.getElementById('partialsTbody').addEventListener('input', (e) => {
+                const idx = +e.target.dataset.idx;
+                if (partialsMode === 'ratio' && e.target.classList.contains('partial-ratio')) {
+                    partials[idx].ratio = e.target.value;
+                } else if (partialsMode === 'hz' && e.target.classList.contains('partial-hz')) {
+                    partials[idx].hz = e.target.value;
+                } else if (e.target.classList.contains('partial-amp')) {
+                    let val = e.target.value.trim();
+                    let dec = NaN;
+                    if (/^\d+(\.\d+)?$/.test(val)) {
+                        dec = parseFloat(val);
+                    } else if (/^\d+\s*\/\s*\d+$/.test(val)) {
+                        const parts = val.split('/');
+                        const num = parseFloat(parts[0]);
+                        const denom = parseFloat(parts[1]);
+                        if (denom !== 0) dec = num / denom;
+                    }
+                    if (!isNaN(dec) && dec >= 0 && dec <= 1) {
+                        partials[idx].amplitude = dec;
+                        partials[idx].ampInput = val; // preserve user input for display
+                    } else {
+                        partials[idx].ampInput = val; // show invalid as-is
+                    }
+                    // Save focus info
+                    const pos = e.target.selectionStart;
+                    renderPartialsTable({idx, pos});
+                }
+            });
+            // Auto-update graph on blur (edit finished)
+            document.getElementById('partialsTbody').addEventListener('blur', (e) => {
+                if (e.target && (e.target.classList.contains('partial-ratio') || e.target.classList.contains('partial-hz') || e.target.classList.contains('partial-amp'))){
+                    updateDissonanceGraph();
+                }
+            }, true);
+
+            document.getElementById('partialsTbody').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-partial')) {
+                    const idx = +e.target.dataset.idx;
+                    partials.splice(idx, 1);
+                    renderPartialsTable();
+                    updateDissonanceGraph();
+                }
+            });
+            // Event listeners for second partials table
+            document.getElementById('partialsTbody2').addEventListener('input', (e) => {
+                const idx = +e.target.dataset.idx;
+                if (partialsMode2 === 'ratio' && e.target.classList.contains('partial2-ratio')) {
+                    partials2[idx].ratio = e.target.value;
+                } else if (partialsMode2 === 'hz' && e.target.classList.contains('partial2-hz')) {
+                    partials2[idx].hz = e.target.value;
+                } else if (e.target.classList.contains('partial2-amp')) {
+                    let val = e.target.value.trim();
+                    let dec = NaN;
+                    if (/^\d+(\.\d+)?$/.test(val)) {
+                        dec = parseFloat(val);
+                    } else if (/^\d+\s*\/\s*\d+$/.test(val)) {
+                        const parts = val.split('/');
+                        const num = parseFloat(parts[0]);
+                        const denom = parseFloat(parts[1]);
+                        if (denom !== 0) dec = num / denom;
+                    }
+                    if (!isNaN(dec) && dec >= 0 && dec <= 1) {
+                        partials2[idx].amplitude = dec;
+                        partials2[idx].ampInput = val;
+                    } else {
+                        partials2[idx].ampInput = val;
+                    }
+                    const pos = e.target.selectionStart;
+                    renderPartials2Table({idx, pos});
+                }
+            });
+            // Auto-update graph on blur (edit finished)
+            document.getElementById('partialsTbody2').addEventListener('blur', (e) => {
+                if (e.target && (e.target.classList.contains('partial2-ratio') || e.target.classList.contains('partial2-hz') || e.target.classList.contains('partial2-amp'))){
+                    updateDissonanceGraph();
+                }
+            }, true);
+
+            document.getElementById('partialsTbody2').addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-partial2')) {
+                    const idx = +e.target.dataset.idx;
+                    partials2.splice(idx, 1);
+                    renderPartials2Table();
+                    updateDissonanceGraph();
+                }
+            });
+        });
+        // --- End Partials/Overtones Data and UI Logic ---
+
+        // Ensure Note 2 panel is hidden on load if in Same Timbre mode
+        document.addEventListener('DOMContentLoaded', () => {
+            setPartialsToDefault();
+            document.getElementById('partials2Container').style.display = 'none';
+        });
+
+        // Initialize everything
+        let dissonanceCurve;
+        
+        function init() {
+            dissonanceCurve = generateDissonanceCurve();
+            const slider = document.getElementById('frequencySlider');
+            const freqDisplay = document.getElementById('freqDisplay');
+            const intervalDisplay = document.getElementById('intervalDisplay');
+            const dissonanceDisplay = document.getElementById('dissonanceDisplay');
+            const playButton = document.getElementById('playButton');
+            const edoInput = document.getElementById('edoInput');
+            
+            // Button event listeners
+            document.getElementById('addPartialBtn').addEventListener('click', () => { addPartial(); updateDissonanceGraph(); });
+            document.getElementById('resetHarmonicsBtn').addEventListener('click', setPartialsToDefault);
+            document.getElementById('updateGraphBtn').addEventListener('click', updateDissonanceGraph);
+            document.getElementById('addPartialBtn2').addEventListener('click', () => { addPartial2(); updateDissonanceGraph(); });
+            document.getElementById('resetHarmonicsBtn2').addEventListener('click', setPartials2ToDefault);
+            document.getElementById('toggleTimbre').addEventListener('click', toggleDifferentTimbres);
+            document.getElementById('updateGraphBtn').addEventListener('click', updateDissonanceGraph);
+            
+            // Mode toggle listeners
+            document.querySelectorAll('input[name="partialsMode"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    partialsMode = e.target.value;
+                    renderPartialsTable();
+                });
+            });
+            document.querySelectorAll('input[name="partialsMode2"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    partialsMode2 = e.target.value;
+                    renderPartials2Table();
+                });
+            });
+            
+            function updateDisplay() {
+                const freq2 = parseFloat(slider.value);
+                freqDisplay.textContent = freq2.toFixed(1) + ' Hz';
+                intervalDisplay.textContent = getIntervalName(220, freq2);
+                dissonanceDisplay.textContent = getCurrentDissonance(freq2).toFixed(3);
+                drawChart(dissonanceCurve.frequencies, dissonanceCurve.dissonanceValues, freq2);
+                
+                // Update audio frequency if playing
+                if (isPlaying) {
+                    updateSecondTone(freq2);
+                }
+            }
+            
+            slider.addEventListener('input', updateDisplay);
+            
+            playButton.addEventListener('click', async () => {
+                const freq2 = parseFloat(slider.value);
+                
+                // Initialize audio on first user interaction
+                if (!audioInitialized) {
+                    await initAudio();
+                }
+                
+                if (isPlaying) {
+                    stopContinuousPlayback();
+                } else {
+                    startContinuousPlayback(freq2);
+                }
+            });
+            
+            // EDO/TET live update
+            if (edoInput) {
+                edoInput.addEventListener('input', function() {
+                    let val = parseInt(this.value);
+                    if (isNaN(val) || val < 1) val = 12;
+                    window.selectedEDO = val;
+                    updateDisplay();
+                });
+            }
+            // Initial display
+            updateDisplay();
+        }
+        
+        // Start when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
