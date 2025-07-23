@@ -1201,6 +1201,12 @@
             window.currentFrequency = 330; // Starting frequency
             updateUIWithFrequency(window.currentFrequency);
 
+            // EDO/TET live update
+            edoInput.addEventListener('input', function() {
+                window.selectedEDO = parseInt(this.value, 10);
+                updateDissonanceGraph();
+            });
+
 
         }
         
