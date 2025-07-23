@@ -227,13 +227,17 @@
         <div class="chart-and-info">
             <div class="chart-section">
                 <div id="chart-container">
-                    <canvas id="dissonanceChart" width="800" height="400"></canvas>
+                    <canvas id="dissonanceChart" width="840" height="400"></canvas>
                 </div>
             </div>
             <div class="info-sidebar">
                 <div class="info-item">
                     <div>Base Frequency</div>
                     <div class="info-value">220.0 Hz</div>
+                </div>
+                <div class="info-item">
+                    <div>Second Tone Frequency</div>
+                    <div class="frequency-display" id="freqDisplay">330.0 Hz</div>
                 </div>
                 <div class="info-item">
                     <div>Current Interval</div>
@@ -243,32 +247,28 @@
                     <div>Dissonance Level</div>
                     <div class="info-value" id="dissonanceDisplay">0.00</div>
                 </div>
-                <div class="info-item">
-                    <div>Frequency Range</div>
-                    <div class="info-value">220-440 Hz</div>
-                </div>
             </div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
             <label for="edoInput" style="font-weight: 500; font-size: 1.08em;">EDO/TET:</label>
             <input type="number" id="edoInput" min="1" max="72" value="12" style="width: 60px; padding: 3px 6px; border-radius: 6px; border: none; outline: none; font-size: 1em;">
             <span style="color: #bbb; font-size: 0.95em;">(vertical lines show notes in this tuning)</span>
         </div>
 
         <div class="controls">
-            <div class="slider-container">
-                <label class="slider-label">
-                    Second Tone Frequency: <span class="frequency-display" id="freqDisplay">330.0 Hz</span>
-                </label>
-                <input type="range" id="frequencySlider" min="220" max="440" value="330" step="1">
-            </div>
-            <button class="play-button" id="playButton">▶ Play Continuous</button>
+            <button class="play-button" id="playButton">▶ Play</button>
         </div>
         <div id="partialsHeaderBar" style="display: flex; align-items: center; gap: 16px; margin: 24px 0 10px 0;">
             <h3 style="margin: 0; color: #333; flex: none;">Custom Partials/Overtones</h3>
             <button id="toggleTimbre" style="padding: 8px 16px; border-radius: 8px; border: none; background: #e24a90; color: white; cursor: pointer; font-size: 1em;">Different Timbres</button>
             <button type="button" id="updateGraphBtn" style="padding: 8px 16px; border-radius: 8px; border: none; background: #4a90e2; color: white; cursor: pointer; font-size: 1em;">Update Graph</button>
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+            <button id="presetClosedPipeBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer; margin-right: 8px;">Closed Pipe</button>
+            <button id="presetFreeBarBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer; margin-right: 8px;">Free Bar</button>
+            <button id="presetFixedBarBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer; margin-right: 8px;">Fixed Bar</button>
+            <button id="presetMembraneBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer;">Membrane</button>
         </div>
         
             <div id="partialsContainer" style="display: flex; gap: 20px;">
@@ -785,7 +785,7 @@
             oscillators1 = [];
             oscillators2 = [];
             isPlaying = false;
-            document.getElementById('playButton').textContent = '▶ Play Continuous';
+            document.getElementById('playButton').textContent = '▶ Play';
         }
 
         // --- Partials/Overtones Data and UI Logic ---
@@ -939,6 +939,61 @@
             setPartialsToDefault();
 
             document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
+            document.getElementById('presetClosedPipeBtn').onclick = function() {
+                // Odd harmonics, strong fundamental
+                partials = [
+                    { ratio: 1, amplitude: 1.0 },
+                    { ratio: 3, amplitude: 0.4 },
+                    { ratio: 5, amplitude: 0.25 },
+                    { ratio: 7, amplitude: 0.15 },
+                    { ratio: 9, amplitude: 0.1 }
+                ];
+                partialsMode = 'ratio';
+                renderPartialsTable();
+                updateDissonanceGraph();
+            };
+            document.getElementById('presetFreeBarBtn').onclick = function() {
+                // Marimba/xylophone: 1 : 2.758 : 5.406 : 8.936 : 13.34 : 18.27
+                partials = [
+                    { ratio: 1, amplitude: 1.0 },
+                    { ratio: 2.758, amplitude: 0.7 },
+                    { ratio: 5.406, amplitude: 0.5 },
+                    { ratio: 8.936, amplitude: 0.3 },
+                    { ratio: 13.34, amplitude: 0.2 },
+                    { ratio: 18.27, amplitude: 0.1 }
+                ];
+                partialsMode = 'ratio';
+                renderPartialsTable();
+                updateDissonanceGraph();
+            };
+            document.getElementById('presetFixedBarBtn').onclick = function() {
+                // Fixed bar: 1 : 4 : 9 : 16 (n^2)
+                partials = [
+                    { ratio: 1, amplitude: 1.0 },
+                    { ratio: 4, amplitude: 0.5 },
+                    { ratio: 9, amplitude: 0.25 },
+                    { ratio: 16, amplitude: 0.12 }
+                ];
+                partialsMode = 'ratio';
+                renderPartialsTable();
+                updateDissonanceGraph();
+            };
+            document.getElementById('presetMembraneBtn').onclick = function() {
+                // Drum membrane: 1.00 : 1.59 : 2.14 : 2.30 : 2.65 : 2.92 : 3.16
+                partials = [
+                    { ratio: 1.00, amplitude: 1.0 },
+                    { ratio: 1.59, amplitude: 0.7 },
+                    { ratio: 2.14, amplitude: 0.5 },
+                    { ratio: 2.30, amplitude: 0.4 },
+                    { ratio: 2.65, amplitude: 0.3 },
+                    { ratio: 2.92, amplitude: 0.2 },
+                    { ratio: 3.16, amplitude: 0.15 }
+                ];
+                partialsMode = 'ratio';
+                renderPartialsTable();
+                updateDissonanceGraph();
+            };
+
             document.getElementById('resetHarmonicsBtn2').onclick = function() { setPartials2ToDefault(); updateDissonanceGraph(); };
             document.getElementById('updateGraphBtn').onclick = updateDissonanceGraph;
             document.getElementById('modeRatio').onchange = function() {
@@ -1053,13 +1108,14 @@
         
         function init() {
             dissonanceCurve = generateDissonanceCurve();
-            const slider = document.getElementById('frequencySlider');
             const freqDisplay = document.getElementById('freqDisplay');
             const intervalDisplay = document.getElementById('intervalDisplay');
             const dissonanceDisplay = document.getElementById('dissonanceDisplay');
             const playButton = document.getElementById('playButton');
             const edoInput = document.getElementById('edoInput');
-            
+            const canvas = document.getElementById('dissonanceChart');
+            let isDragging = false;
+
             // Button event listeners
             document.getElementById('addPartialBtn').addEventListener('click', () => { addPartial(); updateDissonanceGraph(); });
             document.getElementById('resetHarmonicsBtn').addEventListener('click', setPartialsToDefault);
@@ -1067,8 +1123,7 @@
             document.getElementById('addPartialBtn2').addEventListener('click', () => { addPartial2(); updateDissonanceGraph(); });
             document.getElementById('resetHarmonicsBtn2').addEventListener('click', setPartials2ToDefault);
             document.getElementById('toggleTimbre').addEventListener('click', toggleDifferentTimbres);
-            document.getElementById('updateGraphBtn').addEventListener('click', updateDissonanceGraph);
-            
+
             // Mode toggle listeners
             document.querySelectorAll('input[name="partialsMode"]').forEach(radio => {
                 radio.addEventListener('change', (e) => {
@@ -1082,26 +1137,55 @@
                     renderPartials2Table();
                 });
             });
-            
-            function updateDisplay() {
-                const freq2 = parseFloat(slider.value);
-                freqDisplay.textContent = freq2.toFixed(1) + ' Hz';
-                intervalDisplay.textContent = getIntervalName(220, freq2);
-                dissonanceDisplay.textContent = getCurrentDissonance(freq2).toFixed(3);
-                drawChart(dissonanceCurve.frequencies, dissonanceCurve.dissonanceValues, freq2);
-                
-                // Update audio frequency if playing
+
+            function updateUIWithFrequency(freq) {
+                const clampedFreq = Math.max(220, Math.min(440, freq));
+                freqDisplay.textContent = `${clampedFreq.toFixed(1)} Hz`;
+                const ratio = clampedFreq / 220;
+                intervalDisplay.textContent = getIntervalName(220, clampedFreq) + ` (${ratio.toFixed(3)}:1)`;
+                dissonanceDisplay.textContent = getCurrentDissonance(clampedFreq).toFixed(3);
+                window.currentFrequency = clampedFreq;
+                drawChart(dissonanceCurve.frequencies, dissonanceCurve.dissonanceValues, clampedFreq);
+
                 if (isPlaying) {
-                    updateSecondTone(freq2);
+                    updateSecondTone(clampedFreq);
                 }
             }
-            
-            slider.addEventListener('input', updateDisplay);
-            
-            playButton.addEventListener('click', async () => {
-                const freq2 = parseFloat(slider.value);
+
+            function handleInteraction(event) {
+                const rect = canvas.getBoundingClientRect();
+                const padding = 80;
+                const chartWidth = canvas.width - 2 * padding;
+                const minFreq = 220;
+                const maxFreq = 440;
+                let mouseX = event.clientX - rect.left;
+                let freq = minFreq + ((mouseX - padding) / chartWidth) * (maxFreq - minFreq);
                 
-                // Initialize audio on first user interaction
+                if (event.type === 'mousedown' || isDragging) {
+                    updateUIWithFrequency(freq);
+                }
+            }
+
+            canvas.addEventListener('mousedown', (event) => {
+                isDragging = true;
+                handleInteraction(event);
+            });
+
+            canvas.addEventListener('mousemove', (event) => {
+                if (isDragging) {
+                    handleInteraction(event);
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+
+            playButton.addEventListener('click', async () => {
                 if (!audioInitialized) {
                     await initAudio();
                 }
@@ -1109,21 +1193,15 @@
                 if (isPlaying) {
                     stopContinuousPlayback();
                 } else {
-                    startContinuousPlayback(freq2);
+                    startContinuousPlayback(window.currentFrequency);
                 }
             });
-            
-            // EDO/TET live update
-            if (edoInput) {
-                edoInput.addEventListener('input', function() {
-                    let val = parseInt(this.value);
-                    if (isNaN(val) || val < 1) val = 12;
-                    window.selectedEDO = val;
-                    updateDisplay();
-                });
-            }
-            // Initial display
-            updateDisplay();
+
+            // Initial UI update
+            window.currentFrequency = 330; // Starting frequency
+            updateUIWithFrequency(window.currentFrequency);
+
+
         }
         
         // Start when page loads
