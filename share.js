@@ -121,6 +121,10 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             if (typeof renderPartialsTable === 'function') renderPartialsTable();
             if (typeof renderPartials2Table === 'function') renderPartials2Table();
+            // Force the app to process the restored values as if the user had typed them
+            document.querySelectorAll('#partialsTable input, #partialsTable2 input').forEach(input => {
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
             if (typeof updateDissonanceGraph === 'function') updateDissonanceGraph();
         }
     }
