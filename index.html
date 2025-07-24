@@ -989,9 +989,23 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (!loadPartialsFromUrl()) {
+            const loaded = loadPartialsFromUrl();
+            if (!loaded) {
                 setPartialsToDefault();
             }
+            // Render UI based on current data (loaded or default)
+            renderPartialsTable();
+            if (differentTimbres) {
+                document.getElementById('partials2Container').style.display = 'block';
+                renderPartials2Table();
+                document.getElementById('toggleTimbre').textContent = 'Same Timbre';
+                document.getElementById('toggleTimbre').style.background = '#90e24a';
+            } else {
+                document.getElementById('partials2Container').style.display = 'none';
+                document.getElementById('toggleTimbre').textContent = 'Different Timbres';
+                document.getElementById('toggleTimbre').style.background = '#e24a90';
+            }
+            updateDissonanceGraph();
 
             document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
             document.getElementById('presetClosedPipeBtn').onclick = function() {
@@ -1180,11 +1194,7 @@
         });
         // --- End Partials/Overtones Data and UI Logic ---
 
-        // Ensure Note 2 panel is hidden on load if in Same Timbre mode
-        document.addEventListener('DOMContentLoaded', () => {
-            setPartialsToDefault();
-            document.getElementById('partials2Container').style.display = 'none';
-        });
+
 
         // Initialize everything
         let dissonanceCurve;
