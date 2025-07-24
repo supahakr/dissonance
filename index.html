@@ -821,7 +821,9 @@
             // Update table header
             document.querySelector('#partialsTable thead th:first-child').textContent = partialsMode === 'ratio' ? 'Partial (Ratio)' : 'Partial (Hz)';
             partials.forEach((p, i) => {
-                const val = partialsMode === 'ratio' ? (p.ratio ?? '') : (p.hz ?? '');
+                const val = partialsMode === 'ratio'
+    ? (typeof p.ratioInput !== 'undefined' ? p.ratioInput : (p.ratio ?? ''))
+    : (typeof p.hzInput !== 'undefined' ? p.hzInput : (p.hz ?? ''));
                 const inputType = partialsMode === 'ratio' ? 'partial-ratio' : 'partial-hz';
                 // Amplitude as string (fraction if default, else decimal)
                 const ampVal = (p.ampInput != null) ? p.ampInput : fractionString(p.amplitude);
@@ -850,7 +852,9 @@
             // Update table header
             document.querySelector('#partialsTable2 thead th:first-child').textContent = partialsMode2 === 'ratio' ? 'Partial (Ratio)' : 'Partial (Hz)';
             partials2.forEach((p, i) => {
-                const val = partialsMode2 === 'ratio' ? (p.ratio ?? '') : (p.hz ?? '');
+                const val = partialsMode2 === 'ratio'
+    ? (typeof p.ratioInput !== 'undefined' ? p.ratioInput : (p.ratio ?? ''))
+    : (typeof p.hzInput !== 'undefined' ? p.hzInput : (p.hz ?? ''));
                 const inputType = partialsMode2 === 'ratio' ? 'partial2-ratio' : 'partial2-hz';
                 // Amplitude as string (fraction if default, else decimal)
                 const ampVal = (p.ampInput != null) ? p.ampInput : fractionString(p.amplitude);
@@ -1027,22 +1031,20 @@
             document.getElementById('partialsTbody').addEventListener('input', (e) => {
                 const idx = +e.target.dataset.idx;
                 if (partialsMode === 'ratio' && e.target.classList.contains('partial-ratio')) {
-                    let val = e.target.value.trim();
-                    let dec = safeEvalMathExpr(val);
-                    if (!isNaN(dec) && dec > 0) {
-                        partials[idx].ratio = dec;
-                    } else {
-                        partials[idx].ratio = val;
-                    }
-                } else if (partialsMode === 'hz' && e.target.classList.contains('partial-hz')) {
-                    let val = e.target.value.trim();
-                    let dec = safeEvalMathExpr(val);
-                    if (!isNaN(dec) && dec > 0) {
-                        partials[idx].hz = dec;
-                    } else {
-                        partials[idx].hz = val;
-                    }
-                } else if (e.target.classList.contains('partial-amp')) {
+    let val = e.target.value.trim();
+    let dec = safeEvalMathExpr(val);
+    partials[idx].ratioInput = val;
+    if (!isNaN(dec) && dec > 0) {
+        partials[idx].ratio = dec;
+    }
+} else if (partialsMode === 'hz' && e.target.classList.contains('partial-hz')) {
+    let val = e.target.value.trim();
+    let dec = safeEvalMathExpr(val);
+    partials[idx].hzInput = val;
+    if (!isNaN(dec) && dec > 0) {
+        partials[idx].hz = dec;
+    }
+} else if (e.target.classList.contains('partial-amp')) {
                     let val = e.target.value.trim();
                     let dec = safeEvalMathExpr(val);
                     if (!isNaN(dec) && dec >= 0 && dec <= 1) {
@@ -1075,22 +1077,20 @@
             document.getElementById('partialsTbody2').addEventListener('input', (e) => {
                 const idx = +e.target.dataset.idx;
                 if (partialsMode2 === 'ratio' && e.target.classList.contains('partial2-ratio')) {
-                    let val = e.target.value.trim();
-                    let dec = safeEvalMathExpr(val);
-                    if (!isNaN(dec) && dec > 0) {
-                        partials2[idx].ratio = dec;
-                    } else {
-                        partials2[idx].ratio = val;
-                    }
-                } else if (partialsMode2 === 'hz' && e.target.classList.contains('partial2-hz')) {
-                    let val = e.target.value.trim();
-                    let dec = safeEvalMathExpr(val);
-                    if (!isNaN(dec) && dec > 0) {
-                        partials2[idx].hz = dec;
-                    } else {
-                        partials2[idx].hz = val;
-                    }
-                } else if (e.target.classList.contains('partial2-amp')) {
+    let val = e.target.value.trim();
+    let dec = safeEvalMathExpr(val);
+    partials2[idx].ratioInput = val;
+    if (!isNaN(dec) && dec > 0) {
+        partials2[idx].ratio = dec;
+    }
+} else if (partialsMode2 === 'hz' && e.target.classList.contains('partial2-hz')) {
+    let val = e.target.value.trim();
+    let dec = safeEvalMathExpr(val);
+    partials2[idx].hzInput = val;
+    if (!isNaN(dec) && dec > 0) {
+        partials2[idx].hz = dec;
+    }
+} else if (e.target.classList.contains('partial2-amp')) {
                     let val = e.target.value.trim();
                     let dec = safeEvalMathExpr(val);
                     if (!isNaN(dec) && dec >= 0 && dec <= 1) {
