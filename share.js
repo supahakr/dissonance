@@ -94,39 +94,44 @@ function copyShareableLink() {
     document.body.removeChild(textArea);
 }
 
-// On page load, restore settings from URL if present
-window.addEventListener('DOMContentLoaded', () => {
+// This function will be called from the main script after initialization
+function loadSettingsFromURL() {
     const params = new URLSearchParams(window.location.search);
     if (params.has('settings')) {
-        window.hasShareSettings = true;
         const loaded = decodeSettings(params.get('settings'));
         if (loaded) {
-            if (Array.isArray(loaded.partials)) window.partials = loaded.partials;
-            if (Array.isArray(loaded.partials2)) window.partials2 = loaded.partials2;
+            // Restore partials and modes
+            if (Array.isArray(loaded.partials)) window.partials = loaded.partials.map(p => ({...p}));
+            if (Array.isArray(loaded.partials2)) window.partials2 = loaded.partials2.map(p => ({...p}));
             if (loaded.mode) window.partialsMode = loaded.mode;
             if (loaded.mode2) window.partialsMode2 = loaded.mode2;
+
+            // Restore EDO/TET value
             if (loaded.edo) {
-                 window.selectedEDO = loaded.edo;
-                 const edoInput = document.getElementById('edoInput');
-                 if(edoInput) edoInput.value = loaded.edo;
+                window.selectedEDO = loaded.edo;
+                const edoInput = document.getElementById('edoInput');
+                if (edoInput) edoInput.value = loaded.edo;
             }
+
+            // Restore timbre mode
             if (loaded.differentTimbres) {
-                window.differentTimbres = loaded.differentTimbres;
+                window.differentTimbres = true;
                 const toggleBtn = document.getElementById('toggleTimbre');
-                if (toggleBtn) {
-                    const container2 = document.getElementById('partials2Container');
+                const container2 = document.getElementById('partials2Container');
+                if (toggleBtn && container2) {
                     container2.style.display = 'block';
                     toggleBtn.textContent = 'Same Timbre';
                     toggleBtn.style.background = '#90e24a';
                 }
+            } else {
+                window.differentTimbres = false;
             }
+
+            // Re-render everything with the loaded settings
             if (typeof renderPartialsTable === 'function') renderPartialsTable();
             if (typeof renderPartials2Table === 'function') renderPartials2Table();
-            // Force the app to process the restored values as if the user had typed them
-            document.querySelectorAll('#partialsTable input, #partialsTable2 input').forEach(input => {
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            });
             if (typeof updateDissonanceGraph === 'function') updateDissonanceGraph();
+            if (typeof updateUIWithFrequency === 'function') updateUIWithFrequency(window.currentFrequency);
         }
     }
-});
+}

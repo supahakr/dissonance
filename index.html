@@ -941,9 +941,7 @@
         }
         window.selectedEDO = 12;
         document.addEventListener('DOMContentLoaded', () => {
-            if (!window.hasShareSettings) {
-                setPartialsToDefault();
-            }
+            setPartialsToDefault();
 
             document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
             document.getElementById('presetClosedPipeBtn').onclick = function() {
@@ -1228,6 +1226,11 @@
             // Initial UI update
             window.currentFrequency = 330; // Starting frequency
             updateUIWithFrequency(window.currentFrequency);
+
+            // LAST STEP: Check for and apply settings from a shared URL
+            if (typeof loadSettingsFromURL === 'function') {
+                loadSettingsFromURL();
+            }
 
             // EDO/TET live update
             edoInput.addEventListener('input', function() {
