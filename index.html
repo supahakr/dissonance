@@ -1008,28 +1008,48 @@
                     setPartialsToDefault();
                 }
             };
+            // --- Safe Math Expression Evaluator ---
+            function safeEvalMathExpr(str) {
+                // Only allow numbers, (), +, -, *, /, ^, and whitespace
+                if (!/^[-+*/().\d^\s]+$/.test(str)) return NaN;
+                try {
+                    // Replace ^ with ** for exponentiation
+                    str = str.replace(/\^/g, '**');
+                    // Evaluate using Function constructor (safer than eval, but still be careful)
+                    // Only math expressions allowed by regex above
+                    // eslint-disable-next-line no-new-func
+                    return Function(`'use strict';return (${str})`)();
+                } catch {
+                    return NaN;
+                }
+            }
+
             document.getElementById('partialsTbody').addEventListener('input', (e) => {
                 const idx = +e.target.dataset.idx;
                 if (partialsMode === 'ratio' && e.target.classList.contains('partial-ratio')) {
-                    partials[idx].ratio = e.target.value;
+                    let val = e.target.value.trim();
+                    let dec = safeEvalMathExpr(val);
+                    if (!isNaN(dec) && dec > 0) {
+                        partials[idx].ratio = dec;
+                    } else {
+                        partials[idx].ratio = val;
+                    }
                 } else if (partialsMode === 'hz' && e.target.classList.contains('partial-hz')) {
-                    partials[idx].hz = e.target.value;
+                    let val = e.target.value.trim();
+                    let dec = safeEvalMathExpr(val);
+                    if (!isNaN(dec) && dec > 0) {
+                        partials[idx].hz = dec;
+                    } else {
+                        partials[idx].hz = val;
+                    }
                 } else if (e.target.classList.contains('partial-amp')) {
                     let val = e.target.value.trim();
-                    let dec = NaN;
-                    if (/^\d+(\.\d+)?$/.test(val)) {
-                        dec = parseFloat(val);
-                    } else if (/^\d+\s*\/\s*\d+$/.test(val)) {
-                        const parts = val.split('/');
-                        const num = parseFloat(parts[0]);
-                        const denom = parseFloat(parts[1]);
-                        if (denom !== 0) dec = num / denom;
-                    }
+                    let dec = safeEvalMathExpr(val);
                     if (!isNaN(dec) && dec >= 0 && dec <= 1) {
                         partials[idx].amplitude = dec;
-                        partials[idx].ampInput = val; // preserve user input for display
+                        partials[idx].ampInput = val;
                     } else {
-                        partials[idx].ampInput = val; // show invalid as-is
+                        partials[idx].ampInput = val;
                     }
                     // Save focus info
                     const pos = e.target.selectionStart;
@@ -1055,26 +1075,31 @@
             document.getElementById('partialsTbody2').addEventListener('input', (e) => {
                 const idx = +e.target.dataset.idx;
                 if (partialsMode2 === 'ratio' && e.target.classList.contains('partial2-ratio')) {
-                    partials2[idx].ratio = e.target.value;
+                    let val = e.target.value.trim();
+                    let dec = safeEvalMathExpr(val);
+                    if (!isNaN(dec) && dec > 0) {
+                        partials2[idx].ratio = dec;
+                    } else {
+                        partials2[idx].ratio = val;
+                    }
                 } else if (partialsMode2 === 'hz' && e.target.classList.contains('partial2-hz')) {
-                    partials2[idx].hz = e.target.value;
+                    let val = e.target.value.trim();
+                    let dec = safeEvalMathExpr(val);
+                    if (!isNaN(dec) && dec > 0) {
+                        partials2[idx].hz = dec;
+                    } else {
+                        partials2[idx].hz = val;
+                    }
                 } else if (e.target.classList.contains('partial2-amp')) {
                     let val = e.target.value.trim();
-                    let dec = NaN;
-                    if (/^\d+(\.\d+)?$/.test(val)) {
-                        dec = parseFloat(val);
-                    } else if (/^\d+\s*\/\s*\d+$/.test(val)) {
-                        const parts = val.split('/');
-                        const num = parseFloat(parts[0]);
-                        const denom = parseFloat(parts[1]);
-                        if (denom !== 0) dec = num / denom;
-                    }
+                    let dec = safeEvalMathExpr(val);
                     if (!isNaN(dec) && dec >= 0 && dec <= 1) {
                         partials2[idx].amplitude = dec;
                         partials2[idx].ampInput = val;
                     } else {
                         partials2[idx].ampInput = val;
                     }
+                    // Save focus info
                     const pos = e.target.selectionStart;
                     renderPartials2Table({idx, pos});
                 }
