@@ -258,6 +258,7 @@
 
         <div class="controls">
             <button class="play-button" id="playButton">▶ Play</button>
+            
         </div>
         <div id="partialsHeaderBar" style="display: flex; align-items: center; gap: 16px; margin: 24px 0 10px 0;">
             <h3 style="margin: 0; color: #333; flex: none;">Custom Partials/Overtones</h3>
@@ -1238,5 +1239,16 @@
         // Start when page loads
         window.addEventListener('load', init);
     </script>
+<script src="share.js"></script>
+<script>
+document.getElementById('copyLinkBtn').addEventListener('click', copyShareableLink);
+</script>
+<div style="width:100%; display:flex; justify-content:center; margin-top: 40px; margin-bottom: 10px;">
+    <button id="copyLinkBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer;">Copy Shareable Link</button>
+</div>
+<script src="share.js"></script>
+<script>
+document.getElementById('copyLinkBtn').addEventListener('click', copyShareableLink);
+</script>
 </body>
 </html>
