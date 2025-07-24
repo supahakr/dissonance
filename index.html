@@ -258,7 +258,6 @@
 
         <div class="controls">
             <button class="play-button" id="playButton">▶ Play</button>
-            
         </div>
         <div id="partialsHeaderBar" style="display: flex; align-items: center; gap: 16px; margin: 24px 0 10px 0;">
             <h3 style="margin: 0; color: #333; flex: none;">Custom Partials/Overtones</h3>
@@ -272,7 +271,7 @@
             <button id="presetMembraneBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer;">Membrane</button>
         </div>
         
-            <div id="partialsContainer" style="display: flex; gap: 20px;">
+        <div id="partialsContainer" style="display: flex; gap: 20px;">
                 <div id="partials1Container" style="flex: 1;">
                     <h4 style="margin-bottom: 8px; color: #666;">Note 1 (220 Hz)</h4>
                     <div style="margin-bottom: 8px;">
@@ -940,8 +939,59 @@
             }
         }
         window.selectedEDO = 12;
+
+        // --- URL Sharing Logic ---
+        function generateShareableUrl() {
+            const data = {
+                p1: partials.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })),
+                p2: differentTimbres ? partials2.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })) : [],
+                m1: partialsMode,
+                m2: partialsMode2,
+                dt: differentTimbres
+            };
+            const json = JSON.stringify(data);
+            const compressed = btoa(json); // Base64 encode
+            const url = `https://supahakr.github.io/dissonance/?partials=${encodeURIComponent(compressed)}`;
+            
+            const urlOutputContainer = document.getElementById('urlOutputContainer');
+            const generatedUrlInput = document.getElementById('generatedUrl');
+            generatedUrlInput.value = url;
+            urlOutputContainer.style.display = 'block';
+        }
+
+        function loadPartialsFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const partialsData = urlParams.get('partials');
+            if (partialsData) {
+                try {
+                    const json = atob(decodeURIComponent(partialsData));
+                    const data = JSON.parse(json);
+
+                    if (data.p1) {
+                        partials = data.p1.map(p => ({ ratio: p.r, amplitude: p.a, ratioInput: p.ri, hzInput: p.hi, ampInput: p.ai }));
+                    }
+                    if (data.dt) {
+                        differentTimbres = data.dt;
+                        if (data.p2) {
+                            partials2 = data.p2.map(p => ({ ratio: p.r, amplitude: p.a, ratioInput: p.ri, hzInput: p.hi, ampInput: p.ai }));
+                        }
+                    }
+                    if (data.m1) partialsMode = data.m1;
+                    if (data.m2) partialsMode2 = data.m2;
+                    
+                    return true; // Loaded successfully
+                } catch (e) {
+                    console.error('Failed to parse partials from URL:', e);
+                    return false;
+                }
+            }
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            setPartialsToDefault();
+            if (!loadPartialsFromUrl()) {
+                setPartialsToDefault();
+            }
 
             document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
             document.getElementById('presetClosedPipeBtn').onclick = function() {
@@ -983,6 +1033,13 @@
                 renderPartialsTable();
                 updateDissonanceGraph();
             };
+            document.getElementById('generateUrlBtn').onclick = generateShareableUrl;
+            document.getElementById('copyUrlBtn').onclick = function() {
+                const urlInput = document.getElementById('generatedUrl');
+                urlInput.select();
+                document.execCommand('copy');
+            };
+
             document.getElementById('presetMembraneBtn').onclick = function() {
                 // Drum membrane: 1.00 : 1.59 : 2.14 : 2.30 : 2.65 : 2.92 : 3.16
                 partials = [
@@ -1227,11 +1284,6 @@
             window.currentFrequency = 330; // Starting frequency
             updateUIWithFrequency(window.currentFrequency);
 
-            // LAST STEP: Check for and apply settings from a shared URL
-            if (typeof loadSettingsFromURL === 'function') {
-                loadSettingsFromURL();
-            }
-
             // EDO/TET live update
             edoInput.addEventListener('input', function() {
                 window.selectedEDO = parseInt(this.value, 10);
@@ -1244,16 +1296,12 @@
         // Start when page loads
         window.addEventListener('load', init);
     </script>
-<script src="share.js"></script>
-<script>
-document.getElementById('copyLinkBtn').addEventListener('click', copyShareableLink);
-</script>
-<div style="width:100%; display:flex; justify-content:center; margin-top: 40px; margin-bottom: 10px;">
-    <button id="copyLinkBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer;">Copy Shareable Link</button>
-</div>
-<script src="share.js"></script>
-<script>
-document.getElementById('copyLinkBtn').addEventListener('click', copyShareableLink);
-</script>
+    <div style="margin: 40px 0 0 0; text-align: center;">
+        <button id="generateUrlBtn" style="padding: 6px 10px; border-radius: 8px; border: none; background: #f0f0f0; color: #333; font-weight: 500; cursor: pointer; margin-right: 8px;">Generate Shareable URL</button>
+        <div id="urlOutputContainer" style="margin-top: 10px; display: none;">
+            <input type="text" id="generatedUrl" readonly style="width: 80%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; background: #f0f0f0;">
+            <button id="copyUrlBtn" style="padding: 6px 10px; border-radius: 6px; border: none; background: #28a745; color: white; cursor: pointer;">Copy</button>
+        </div>
+    </div>
 </body>
 </html>
