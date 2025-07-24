@@ -941,7 +941,10 @@
         }
         window.selectedEDO = 12;
         document.addEventListener('DOMContentLoaded', () => {
-            setPartialsToDefault();
+            const params = new URLSearchParams(window.location.search);
+            if (!params.has('settings')) {
+                setPartialsToDefault();
+            }
 
             document.getElementById('resetHarmonicsBtn').onclick = function() { setPartialsToDefault(); updateDissonanceGraph(); };
             document.getElementById('presetClosedPipeBtn').onclick = function() {
