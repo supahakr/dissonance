@@ -941,8 +941,7 @@
         }
         window.selectedEDO = 12;
         document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            if (!params.has('settings')) {
+            if (!window.hasShareSettings) {
                 setPartialsToDefault();
             }
 

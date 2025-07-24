@@ -98,6 +98,7 @@ function copyShareableLink() {
 window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('settings')) {
+        window.hasShareSettings = true;
         const loaded = decodeSettings(params.get('settings'));
         if (loaded) {
             if (Array.isArray(loaded.partials)) window.partials = loaded.partials;
