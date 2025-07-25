@@ -984,13 +984,20 @@
                     }
                     if (data.m1) partialsMode = data.m1;
                     if (data.m2) partialsMode2 = data.m2;
-                    if (data.edo) window.selectedEDO = data.edo;
+                    if (data.edo) {
+                        window.selectedEDO = data.edo;
+                        edoInput.value = data.edo; // Update the input field
+                    }
                     if (data.snap) {
                         snapToEdo = data.snap;
                         const edoSnapBtn = document.getElementById('edoSnapBtn');
                         if (edoSnapBtn) {
                             edoSnapBtn.style.background = snapToEdo ? '#28a745' : '#555';
                             edoSnapBtn.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
+                            // Force update the UI to match the snap state
+                            if (snapToEdo) {
+                                updateUIWithFrequency(window.currentFrequency);
+                            }
                         }
                     }
                     
@@ -1328,8 +1335,12 @@
             });
 
             // Initial UI update
-            window.currentFrequency = 330; // Starting frequency
-            updateUIWithFrequency(window.currentFrequency);
+            updateUIWithFrequency(330); // Default to 330Hz (perfect fifth)
+            
+            // If we loaded from URL with snap enabled, apply it immediately
+            if (snapToEdo) {
+                updateUIWithFrequency(window.currentFrequency);
+            }
 
             // EDO/TET live update
             edoInput.addEventListener('input', function() {
