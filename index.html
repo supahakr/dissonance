@@ -974,31 +974,68 @@
                     const data = JSON.parse(json);
 
                     if (data.p1) {
-                        partials = data.p1.map(p => ({ ratio: p.r, amplitude: p.a, ratioInput: p.ri, hzInput: p.hi, ampInput: p.ai }));
+                        partials = data.p1.map(p => ({
+                            ratio: p.r,
+                            amplitude: p.a,
+                            ratioInput: p.ri || p.r.toString(),
+                            hzInput: p.hi || (220 * p.r).toFixed(2).replace(/\.?0+$/, ''),
+                            ampInput: p.ai || p.a.toString()
+                        }));
                     }
-                    if (data.dt) {
+                    if (data.dt !== undefined) {
                         differentTimbres = data.dt;
                         if (data.p2) {
-                            partials2 = data.p2.map(p => ({ ratio: p.r, amplitude: p.a, ratioInput: p.ri, hzInput: p.hi, ampInput: p.ai }));
+                            partials2 = data.p2.map(p => ({ 
+                                ratio: p.r, 
+                                amplitude: p.a, 
+                                ratioInput: p.ri || p.r.toString(), 
+                                hzInput: p.hi || (220 * p.r).toFixed(2).replace(/\.?0+$/, ''), 
+                                ampInput: p.ai || p.a.toString() 
+                            }));
                         }
+                    } else {
+                        differentTimbres = false;
                     }
                     if (data.m1) partialsMode = data.m1;
                     if (data.m2) partialsMode2 = data.m2;
+                    
+                    // Update EDO and snap state
                     if (data.edo) {
-                        window.selectedEDO = data.edo;
-                        edoInput.value = data.edo; // Update the input field
+                        window.selectedEDO = parseInt(data.edo, 10);
+                        if (edoInput) edoInput.value = window.selectedEDO;
                     }
-                    if (data.snap) {
+                    
+                    // Initialize snap state before any UI updates
+                    if (data.snap !== undefined) {
                         snapToEdo = data.snap;
-                        const edoSnapBtn = document.getElementById('edoSnapBtn');
-                        if (edoSnapBtn) {
-                            edoSnapBtn.style.background = snapToEdo ? '#28a745' : '#555';
-                            edoSnapBtn.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
-                            // Force update the UI to match the snap state
-                            if (snapToEdo) {
-                                updateUIWithFrequency(window.currentFrequency);
-                            }
-                        }
+                    }
+                    
+                    // Update UI based on loaded data
+                    renderPartialsTable();
+                    if (differentTimbres) {
+                        document.getElementById('partials2Container').style.display = 'block';
+                        renderPartials2Table();
+                        document.getElementById('toggleTimbre').textContent = 'Same Timbre';
+                        document.getElementById('toggleTimbre').style.background = '#90e24a';
+                    } else {
+                        document.getElementById('partials2Container').style.display = 'none';
+                        document.getElementById('toggleTimbre').textContent = 'Different Timbres';
+                        document.getElementById('toggleTimbre').style.background = '#e24a90';
+                    }
+                    
+                    // Update snap button UI
+                    const edoSnapBtn = document.getElementById('edoSnapBtn');
+                    if (edoSnapBtn) {
+                        edoSnapBtn.style.background = snapToEdo ? '#28a745' : '#555';
+                        edoSnapBtn.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
+                    }
+                    
+                    // Update graph with new settings
+                    updateDissonanceGraph();
+                    
+                    // If snap is active, update the frequency to snap to nearest EDO
+                    if (snapToEdo && window.currentFrequency) {
+                        updateUIWithFrequency(window.currentFrequency);
                     }
                     
                     return true; // Loaded successfully
