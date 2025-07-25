@@ -943,6 +943,9 @@
 
         // --- URL Sharing Logic ---
         function generateShareableUrl() {
+            console.log('generateShareableUrl called');
+            // Get the current snap state from the button
+            const snapActive = document.getElementById('edoSnapBtn').textContent === 'Snapping Active';
             const data = {
                 p1: partials.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })),
                 p2: differentTimbres ? partials2.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })) : [],
@@ -950,7 +953,7 @@
                 m2: partialsMode2,
                 dt: differentTimbres,
                 edo: window.selectedEDO || 12,
-                snap: snapToEdo
+                snap: snapActive
             };
             const json = JSON.stringify(data);
             const compressed = btoa(json); // Base64 encode
@@ -1059,12 +1062,19 @@
                 renderPartialsTable();
                 updateDissonanceGraph();
             };
-            document.getElementById('generateUrlBtn').onclick = generateShareableUrl;
-            document.getElementById('copyUrlBtn').onclick = function() {
+            const generateBtn = document.getElementById('generateUrlBtn');
+            console.log('generateBtn:', generateBtn);
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generateShareableUrl);
+                console.log('Event listener added to generate button');
+            } else {
+                console.error('Generate button not found!');
+            }
+            document.getElementById('copyUrlBtn').addEventListener('click', () => {
                 const urlInput = document.getElementById('generatedUrl');
                 urlInput.select();
                 document.execCommand('copy');
-            };
+            });
 
             document.getElementById('presetMembraneBtn').onclick = function() {
                 // Drum membrane: 1.00 : 1.59 : 2.14 : 2.30 : 2.65 : 2.92 : 3.16
