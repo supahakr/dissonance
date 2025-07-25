@@ -943,19 +943,6 @@
 
         // --- URL Sharing Logic ---
         function generateShareableUrl() {
-            const data = {
-                p1: partials.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })),
-                p2: differentTimbres ? partials2.map(p => ({ r: p.ratio, a: p.amplitude, ri: p.ratioInput, hi: p.hzInput, ai: p.ampInput })) : [],
-                m1: partialsMode,
-                m2: partialsMode2,
-                dt: differentTimbres,
-                edo: window.selectedEDO,
-                snap: snapToEdo
-            };
-            const json = JSON.stringify(data);
-            const compressed = btoa(json); // Base64 encode
-            const url = `https://supahakr.github.io/dissonance/?partials=${encodeURIComponent(compressed)}`;
-            
             const urlOutputContainer = document.getElementById('urlOutputContainer');
             const generatedUrlInput = document.getElementById('generatedUrl');
             generatedUrlInput.value = url;
@@ -981,9 +968,19 @@
                     }
                     if (data.m1) partialsMode = data.m1;
                     if (data.m2) partialsMode2 = data.m2;
-                    if (data.edo) window.selectedEDO = data.edo;
-                    if (data.snap) snapToEdo = data.snap;
-                    
+                    if (typeof data.edo === 'number' && !isNaN(data.edo)) {
+                        window.selectedEDO = data.edo;
+                        const edoInput = document.getElementById('edoInput');
+                        if (edoInput) edoInput.value = data.edo;
+                    }
+                    if (typeof data.snap === 'boolean') {
+                        snapToEdo = data.snap;
+                        const edoSnapBtn = document.getElementById('edoSnapBtn');
+                        if (edoSnapBtn) {
+                            edoSnapBtn.style.background = snapToEdo ? '#28a745' : '#555';
+                            edoSnapBtn.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
+                        }
+                    }
                     return true; // Loaded successfully
                 } catch (e) {
                     console.error('Failed to parse partials from URL:', e);
@@ -998,15 +995,6 @@
             if (!loaded) {
                 setPartialsToDefault();
             }
-
-            // Update UI from loaded settings
-            document.getElementById('edoInput').value = window.selectedEDO;
-            if (snapToEdo) {
-                const edoSnapBtn = document.getElementById('edoSnapBtn');
-                edoSnapBtn.style.background = '#28a745';
-                edoSnapBtn.textContent = 'Snapping Active';
-            }
-
             // Render UI based on current data (loaded or default)
             renderPartialsTable();
             if (differentTimbres) {
