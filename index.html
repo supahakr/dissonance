@@ -253,6 +253,7 @@
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
             <label for="edoInput" style="font-weight: 500; font-size: 1.08em;">EDO/TET:</label>
             <input type="number" id="edoInput" min="1" max="72" value="12" style="width: 60px; padding: 3px 6px; border-radius: 6px; border: none; outline: none; font-size: 1em;">
+            <button id="edoSnapBtn" style="padding: 6px 12px; border-radius: 8px; border: none; background: #555; color: white; cursor: pointer;">Snap to EDO</button>
             <span style="color: #bbb; font-size: 0.95em;">(vertical lines show notes in this tuning)</span>
         </div>
 
@@ -1206,8 +1207,10 @@
             const dissonanceDisplay = document.getElementById('dissonanceDisplay');
             const playButton = document.getElementById('playButton');
             const edoInput = document.getElementById('edoInput');
+            const edoSnapBtn = document.getElementById('edoSnapBtn');
             const canvas = document.getElementById('dissonanceChart');
             let isDragging = false;
+            let snapToEdo = false;
 
             // Button event listeners
             document.getElementById('addPartialBtn').addEventListener('click', () => { addPartial(); updateDissonanceGraph(); });
@@ -1231,8 +1234,21 @@
                 });
             });
 
-            function updateUIWithFrequency(freq) {
-                const clampedFreq = Math.max(220, Math.min(440, freq));
+            function getSnappedFrequency(freq) {
+        if (!snapToEdo || !window.selectedEDO || window.selectedEDO < 2) {
+            return freq;
+        }
+        const baseFreq = 220;
+        const octaveRatio = freq / baseFreq;
+        const edoStep = Math.pow(2, 1 / window.selectedEDO);
+        const nearestStep = Math.round(Math.log(octaveRatio) / Math.log(edoStep));
+        const snappedRatio = Math.pow(edoStep, nearestStep);
+        return baseFreq * snappedRatio;
+    }
+
+    function updateUIWithFrequency(freq) {
+                let snappedFreq = getSnappedFrequency(freq);
+        const clampedFreq = Math.max(220, Math.min(440, snappedFreq));
                 freqDisplay.textContent = `${clampedFreq.toFixed(1)} Hz`;
                 const ratio = clampedFreq / 220;
                 intervalDisplay.textContent = getIntervalName(220, clampedFreq) + ` (${ratio.toFixed(3)}:1)`;
@@ -1298,6 +1314,14 @@
             edoInput.addEventListener('input', function() {
                 window.selectedEDO = parseInt(this.value, 10);
                 updateDissonanceGraph();
+            });
+
+            edoSnapBtn.addEventListener('click', function() {
+                snapToEdo = !snapToEdo;
+                this.style.background = snapToEdo ? '#28a745' : '#555';
+                this.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
+                // Update current frequency to snap it if activating
+                updateUIWithFrequency(window.currentFrequency);
             });
 
 
