@@ -949,7 +949,7 @@
                 m1: partialsMode,
                 m2: partialsMode2,
                 dt: differentTimbres,
-                edo: window.selectedEDO,
+                edo: window.selectedEDO || 12,
                 snap: snapToEdo
             };
             const json = JSON.stringify(data);
@@ -982,7 +982,14 @@
                     if (data.m1) partialsMode = data.m1;
                     if (data.m2) partialsMode2 = data.m2;
                     if (data.edo) window.selectedEDO = data.edo;
-                    if (data.snap) snapToEdo = data.snap;
+                    if (data.snap) {
+                        snapToEdo = data.snap;
+                        const edoSnapBtn = document.getElementById('edoSnapBtn');
+                        if (edoSnapBtn) {
+                            edoSnapBtn.style.background = snapToEdo ? '#28a745' : '#555';
+                            edoSnapBtn.textContent = snapToEdo ? 'Snapping Active' : 'Snap to EDO';
+                        }
+                    }
                     
                     return true; // Loaded successfully
                 } catch (e) {
