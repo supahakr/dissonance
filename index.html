@@ -530,18 +530,22 @@
                 ctx.fillText(freq, x, padding + chartHeight + 20);
             }
             
-            // Add musical interval markers (including more ratios)
             const intervals = [
                 { freq: 220, name: "1:1", color: "#28a745" },
                 { freq: 247, name: "9:8", color: "#6f42c1" },
-                { freq: 264, name: "8:7", color: "#fd7e14" },
+                { freq: 251, name: "8:7", color: "#fd7e14" },
+                { freq: 257, name: "7:6", color: "#6f42c1" },
+                { freq: 264, name: "6:5", color: "#fd7e14" },
                 { freq: 275, name: "5:4", color: "#6f42c1" },
                 { freq: 293, name: "4:3", color: "#28a745" },
                 { freq: 308, name: "7:5", color: "#fd7e14" },
-                { freq: 352, name: "8:5", color: "#fd7e14" }, // correct 8/5
+                { freq: 352, name: "8:5", color: "#fd7e14" },
                 { freq: 330, name: "3:2", color: "#28a745" },
-                { freq: 385, name: "7:4", color: "#fd7e14" }, // correct 7/4
+                { freq: 385, name: "7:4", color: "#fd7e14" },
                 { freq: 367, name: "5:3", color: "#6f42c1" },
+                { freq: 396, name: "9:5", color: "#6f42c1" },
+                { freq: 403, name: "11:6", color: "#fd7e14" },
+                { freq: 409, name: "13:7", color: "#6f42c1" },
                 { freq: 440, name: "2:1", color: "#28a745" }
             ];
             
